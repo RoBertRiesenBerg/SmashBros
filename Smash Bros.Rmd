@@ -302,3 +302,99 @@ renderPlot({
 
 ```
 
+Cross Player Comparisons {data-navmenu="Smash Stats"}
+=======================================================================
+
+Column {data-width=500}
+-----------------------------------------------------------------------
+
+### Win Percent by Player
+
+```{r}
+
+renderPlot({
+  ggplot(WinPercentData ,aes(x = reorder(Player ,WinPercentUnformatted ,function(x) {x}) ,y = WinPercentUnformatted)) +
+    geom_col() +
+    coord_flip() +
+    scale_y_continuous(limits = c(0 ,1) ,labels = scales::percent) +
+    # ggtitle("Points by Player") +
+    # theme(plot.title = element_text(hjust = 0.5)) +
+    labs(x = "Player") +
+    # scale_fill_gradientn(colors = c("darkred", "tomato1","palegreen", "darkgreen") ,limit = c(0 ,MaxWeeksAsKing)) +    
+    # scale_fill_brewer(palette = "Set1") +
+    theme_fivethirtyeight()      
+})
+
+```
+
+### Avg Damage Given by Player
+
+```{r}
+
+DamageGivenByPlayer <- SmashData %>%
+  group_by(Player) %>%
+  summarise(AvgDamageGiven = mean(DamageGiven))
+
+renderPlot({
+  ggplot(DamageGivenByPlayer ,aes(x = reorder(Player ,AvgDamageGiven ,function(x) {x}) ,y = AvgDamageGiven)) +
+    geom_col() +
+    coord_flip() +
+    scale_y_continuous(labels = scales::comma) +
+    # ggtitle("Points by Player") +
+    # theme(plot.title = element_text(hjust = 0.5)) +
+    labs(x = "Player") +
+    # scale_fill_gradientn(colors = c("darkred", "tomato1","palegreen", "darkgreen") ,limit = c(0 ,MaxWeeksAsKing)) +    
+    # scale_fill_brewer(palette = "Set1") +
+    theme_fivethirtyeight()      
+})
+
+```
+
+Column {data-width=500}
+-----------------------------------------------------------------------
+
+### Avg KO's by Player
+
+```{r}
+KosByPlayer <- SmashData %>%
+  group_by(Player) %>%
+  summarise(AvgKos = mean(KO))
+
+
+renderPlot({
+  ggplot(KosByPlayer ,aes(x = reorder(Player ,AvgKos ,function(x) {x}) ,y = AvgKos)) +
+    geom_col() +
+    coord_flip() +
+    scale_y_continuous(labels = scales::comma) +
+    # ggtitle("Points by Player") +
+    # theme(plot.title = element_text(hjust = 0.5)) +
+    labs(x = "Player") +
+    # scale_fill_gradientn(colors = c("darkred", "tomato1","palegreen", "darkgreen") ,limit = c(0 ,MaxWeeksAsKing)) +    
+    # scale_fill_brewer(palette = "Set1") +
+    theme_fivethirtyeight()      
+})
+
+```
+
+### Total Games Played
+
+```{r}
+
+GamesPlayedByPlayer <- SmashData %>%
+  group_by(Player) %>%
+  summarise(GamesPlayed = n())
+
+renderPlot({
+  ggplot(GamesPlayedByPlayer ,aes(x = reorder(Player ,GamesPlayed ,function(x) {x}) ,y = GamesPlayed)) +
+    geom_col() +
+    coord_flip() +
+    scale_y_continuous(labels = scales::comma) +
+    # ggtitle("Points by Player") +
+    # theme(plot.title = element_text(hjust = 0.5)) +
+    labs(x = "Player") +
+    # scale_fill_gradientn(colors = c("darkred", "tomato1","palegreen", "darkgreen") ,limit = c(0 ,MaxWeeksAsKing)) +    
+    # scale_fill_brewer(palette = "Set1") +
+    theme_fivethirtyeight()      
+})
+
+```
