@@ -23,6 +23,7 @@ library(DT)
 library(rsconnect)
 library(readxl)
 
+
 ```
 
 
@@ -86,6 +87,15 @@ WinPercentData <- SmashData %>%
   summarise(WinPercent = scales::percent(sum(Win) / n())
             ,WinPercentUnformatted = sum(Win) / n())
 
+## Avg Stats by Player
+DamageGivenByPlayer <- SmashData %>%
+  group_by(Player) %>%
+  summarise(AvgDamageGiven = mean(DamageGiven))
+
+KosByPlayer <- SmashData %>%
+  group_by(Player) %>%
+  summarise(AvgKos = mean(KO))
+
 ```
 
 Player Stats {data-navmenu="Smash Stats"}
@@ -93,6 +103,9 @@ Player Stats {data-navmenu="Smash Stats"}
 
 Column {data-width=200 .sidebar}
 -----------------------------------------------------------------------
+
+### Player Filter
+
 ```{r}
 
 selectInput("PlayerInput"
@@ -124,7 +137,7 @@ renderValueBox(
 
 ```
 
-### Longest Win Streak
+### Longest Winning Streak
 
 ```{r}
 
@@ -226,7 +239,7 @@ renderValueBox(
 ```
 
 
-### Current Win Streak
+### Current Winning Streak
 
 ```{r}
 ReactiveCurrentWinStreak <- reactive({
@@ -302,6 +315,273 @@ renderPlot({
 
 ```
 
+
+Character Stats {data-navmenu="Smash Stats"}
+=======================================================================
+
+Column {data-width=200 .sidebar}
+-----------------------------------------------------------------------
+
+### Player Filter
+
+```{r}
+
+selectInput("PlayerInput2"
+            ,"Select a player:"
+            ,choices = PlayerNames$Player
+            ,selected = TopPlayer)
+
+```
+
+
+
+Column {data-width=450}
+-----------------------------------------------------------------------
+
+### Avg Damage Given
+
+```{r}
+
+ReactiveDamageGiven <- reactive({
+  DamageGivenByPlayer %>%
+    filter(Player == input$PlayerInput2)
+})
+
+TopDamageGiven <- DamageGivenByPlayer %>%
+  summarise(MaxDamageGiven = max(AvgDamageGiven)) %>%
+  as.numeric()
+  
+BottomDamageGiven <- DamageGivenByPlayer %>%
+  summarise(MaxDamageGiven = min(AvgDamageGiven)) %>%
+  as.numeric()
+
+renderValueBox(
+  valueBox(ReactiveDamageGiven() %>% select(AvgDamageGiven) %>% as.numeric() %>% round(digits = 0)
+           ,icon = "fa-gavel"
+           ,color = ifelse(ReactiveDamageGiven() %>% select(AvgDamageGiven) %>% as.numeric() >= floor(TopDamageGiven), "success", ifelse(ReactiveDamageGiven() %>% select(AvgDamageGiven) %>% as.numeric() <= ceiling(BottomDamageGiven) ,"danger" ,"warning")))
+)
+
+```
+
+### Longest Losing Streak
+
+```{r}
+
+ReactiveLongestLoseStreak <- reactive({
+  SmashData %>%
+    filter(Player == input$PlayerInput2) %>%
+    summarise(LongestLoseStreak2 = max(rle(OpponentWin == 1)[[1]][rle(OpponentWin == 1)[[2]] == 1])) %>%
+    as.numeric()
+})
+
+
+renderValueBox(
+  valueBox(ReactiveLongestLoseStreak()
+           ,color = ifelse(ReactiveLongestLoseStreak() < 4 ,"success" ,ifelse(ReactiveLongestWinStreak() < 6  ,"warning" ,"danger")))
+)
+
+```
+
+### Win Percent by Character
+
+```{r}
+
+WinPercentByCharacter <- SmashData %>%
+  group_by(Player ,Character) %>%
+  summarise(WinPercent = sum(Win) / n())
+
+ReactiveWinPercentByCharacter <- reactive({
+  WinPercentByCharacter %>%
+    filter(Player == input$PlayerInput2) %>%
+    left_join(WinPercentData %>% select(Player ,WinPercentUnformatted) ,by = "Player") 
+})
+
+renderPlot({
+  ggplot(ReactiveWinPercentByCharacter() ,aes(x = reorder(Character ,WinPercent ,function(x) {x}) ,y = WinPercent ,fill = WinPercent)) +
+    geom_col() +
+    coord_flip() +
+    scale_y_continuous(limits = c(0 ,1) ,labels = scales::percent) +
+    geom_hline(yintercept = ReactiveWinPercentByCharacter() %>% select(WinPercentUnformatted) %>% unique() %>% as.numeric()) +  
+    # ggtitle("Points by Player") +
+    # theme(plot.title = element_text(hjust = 0.5)) +
+    labs(x = "Player") +
+    scale_fill_gradientn(colors = c("darkred", "tomato1","palegreen", "darkgreen") ,limit = c(0 ,1) ,labels = scales::percent) +    
+    # scale_fill_brewer(palette = "Set1") +
+    theme_fivethirtyeight() +
+    theme(legend.position = "none")     
+})
+
+```
+
+
+### Avg Damage Given by Character
+
+```{r}
+
+DamageGivenByCharacter <- SmashData %>%
+  group_by(Player ,Character) %>%
+  summarise(AvgDamageGivenByCharacter = mean(DamageGiven))
+
+TopDamageGivenByCharacter <- DamageGivenByCharacter %>%
+  ungroup() %>%
+  summarise(MaxDamageGivenByCharacter = max(AvgDamageGivenByCharacter)) %>%
+  select(MaxDamageGivenByCharacter) %>%
+  as.numeric()
+
+BottomDamageGivenByCharacter <- DamageGivenByCharacter %>%
+  ungroup() %>%
+  summarise(MinDamageGivenByCharacter = min(AvgDamageGivenByCharacter)) %>%
+  select(MinDamageGivenByCharacter) %>%
+  as.numeric()
+
+ReactiveAvgDamageGivenByCharacter <- reactive({
+  DamageGivenByCharacter %>%
+    filter(Player == input$PlayerInput2) %>%
+    left_join(DamageGivenByPlayer ,by = "Player")
+})
+
+
+renderPlot({
+  ggplot(ReactiveAvgDamageGivenByCharacter() ,aes(x = reorder(Character ,AvgDamageGivenByCharacter ,function(x) {x}) ,y = AvgDamageGivenByCharacter ,fill = AvgDamageGivenByCharacter)) +
+    geom_col() +
+    coord_flip() +
+    scale_y_continuous(limits = c(0 ,TopDamageGivenByCharacter + 15) ,labels = scales::comma) +
+    geom_hline(yintercept = ReactiveAvgDamageGivenByCharacter() %>% select(AvgDamageGiven) %>% unique() %>% as.numeric()) +     
+    # ggtitle("Points by Player") +
+    # theme(plot.title = element_text(hjust = 0.5)) +
+    labs(x = "Player") +
+    scale_fill_gradientn(colors = c("darkred", "tomato1","palegreen", "darkgreen") ,limit = c(floor(BottomDamageGivenByCharacter) ,ceiling(TopDamageGivenByCharacter)) ,labels = scales::comma) +    
+    # scale_fill_brewer(palette = "Set1") +
+    theme_fivethirtyeight() +
+    theme(legend.position = "none")
+})
+
+```
+
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+### Avg KOs
+
+```{r}
+
+MaxKos <- KosByPlayer %>%
+  summarise(MaxKos = max(AvgKos)) %>%
+  as.numeric()
+
+MinKos <- KosByPlayer %>%
+  summarise(MinKos = min(AvgKos)) %>%
+  as.numeric()
+
+ReactiveKos <- reactive({
+  KosByPlayer %>%
+    filter(Player == input$PlayerInput2) 
+})
+
+renderValueBox(
+  valueBox(ReactiveKos() %>% select(AvgKos) %>% as.numeric() %>% round(digits = 2)
+           ,icon = "fa-heart"
+           ,color = ifelse(ReactiveKos() %>% select(AvgKos) %>% as.numeric() >= floor(MaxKos / .01) * .01, "success", ifelse(ReactiveKos() %>% select(AvgKos) %>% as.numeric() <= ceiling(MinKos / .01) * .01 ,"danger" ,"warning")))
+)
+
+```
+
+
+### Current Losing Streak
+
+```{r}
+ReactiveCurrentLoseStreak <- reactive({
+  SmashData %>%  
+    filter(Player == input$PlayerInput2) %>%
+    select(OpponentWin) %>%
+    summarise(Current = ifelse(rle(OpponentWin)$values[length(rle(OpponentWin)$values)] == 0 ,0 ,rle(OpponentWin)$lengths[length(rle(OpponentWin)$lengths)])) %>%
+    as.numeric()
+})
+
+
+renderValueBox(
+  valueBox(ReactiveCurrentLoseStreak()
+           ,color = ifelse(ReactiveCurrentLoseStreak() == 0, "success" ,ifelse(ReactiveCurrentWinStreak() < 3  ,"warning" ,"danger")))
+)
+
+```
+
+### Games Played by Character
+
+```{r}
+
+ReactiveGamesPlayedByCharacter <- reactive({
+  SmashData %>%
+    filter(Player == input$PlayerInput2) %>%
+    group_by(Character) %>%
+    summarise(GamesPlayed = n())
+})
+
+
+renderPlot({
+  ggplot(ReactiveGamesPlayedByCharacter() ,aes(x = reorder(Character ,GamesPlayed ,function(x) {x}) ,y = GamesPlayed)) +
+    geom_col() +
+    coord_flip() +
+    scale_y_continuous(labels = scales::comma) +
+    # ggtitle("Points by Player") +
+    # theme(plot.title = element_text(hjust = 0.5)) +
+    labs(x = "Player") +
+    # scale_fill_gradientn(colors = c("darkred", "tomato1","palegreen", "darkgreen") ,limit = c(0 ,1)) +    
+    # scale_fill_brewer(palette = "Set1") +
+    theme_fivethirtyeight()      
+})
+
+```
+
+
+### Avg KO's by Character
+
+```{r}
+
+MinKos <- KosByPlayer %>%
+  summarise(MinKos = min(AvgKos)) %>%
+  as.numeric()
+
+KosByCharacter <- SmashData %>%
+  group_by(Player ,Character) %>%
+  summarise(AvgKosByCharacter = mean(KO))
+
+MinKosByCharacter <- KosByCharacter %>%
+  ungroup() %>%
+  summarise(MinKos = min(AvgKosByCharacter)) %>%
+  as.numeric()
+
+MaxKosByCharacter <- KosByCharacter %>%
+  ungroup() %>%
+  summarise(MaxKos = max(AvgKosByCharacter)) %>%
+  as.numeric()
+
+ReactiveKosByCharacter <- reactive({
+  KosByCharacter %>%
+    filter(Player == input$PlayerInput2) %>%
+    left_join(KosByPlayer ,by = "Player")
+})
+
+
+renderPlot({
+  ggplot(ReactiveKosByCharacter() ,aes(x = reorder(Character ,AvgKosByCharacter ,function(x) {x}) ,y = AvgKosByCharacter ,fill = AvgKosByCharacter)) +
+    geom_col() +
+    coord_flip() +
+    scale_y_continuous(limits = c(0 ,3)) +
+    geom_hline(yintercept = ReactiveKosByCharacter() %>% select(AvgKos) %>% unique() %>% as.numeric()) +     
+    # ggtitle("Points by Player") +
+    # theme(plot.title = element_text(hjust = 0.5)) +
+    labs(x = "Player") +
+    scale_fill_gradientn(colors = c("darkred", "tomato1","palegreen", "darkgreen") ,limit = c(floor(MinKosByCharacter) ,ceiling(MaxKosByCharacter)) ,labels = scales::comma) +    
+    # scale_fill_brewer(palette = "Set1") +
+    theme_fivethirtyeight() +
+    theme(legend.position = "none")
+})
+
+```
+
+
 Cross Player Comparisons {data-navmenu="Smash Stats"}
 =======================================================================
 
@@ -331,10 +611,6 @@ renderPlot({
 
 ```{r}
 
-DamageGivenByPlayer <- SmashData %>%
-  group_by(Player) %>%
-  summarise(AvgDamageGiven = mean(DamageGiven))
-
 renderPlot({
   ggplot(DamageGivenByPlayer ,aes(x = reorder(Player ,AvgDamageGiven ,function(x) {x}) ,y = AvgDamageGiven)) +
     geom_col() +
@@ -356,10 +632,6 @@ Column {data-width=500}
 ### Avg KO's by Player
 
 ```{r}
-KosByPlayer <- SmashData %>%
-  group_by(Player) %>%
-  summarise(AvgKos = mean(KO))
-
 
 renderPlot({
   ggplot(KosByPlayer ,aes(x = reorder(Player ,AvgKos ,function(x) {x}) ,y = AvgKos)) +
