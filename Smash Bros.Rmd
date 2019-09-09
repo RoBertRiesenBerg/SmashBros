@@ -377,7 +377,7 @@ ReactiveLongestLoseStreak <- reactive({
 
 renderValueBox(
   valueBox(ReactiveLongestLoseStreak()
-           ,color = ifelse(ReactiveLongestLoseStreak() < 4 ,"success" ,ifelse(ReactiveLongestWinStreak() < 6  ,"warning" ,"danger")))
+           ,color = ifelse(ReactiveLongestLoseStreak() < 4 ,"success" ,ifelse(ReactiveLongestLoseStreak() < 6  ,"warning" ,"danger")))
 )
 
 ```
