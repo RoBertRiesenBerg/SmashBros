@@ -28,6 +28,8 @@ library(readxl)
 
 
 ```{r DataReadSmash ,include=FALSE}
+# setwd("C:/Users/riese/Desktop/SmashBros")
+
 ## Read in data
 RawSmashData <- readxl::read_excel("SSBU Code.xlsx")
 
