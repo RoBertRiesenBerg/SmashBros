@@ -502,7 +502,7 @@ ReactiveCurrentLoseStreak <- reactive({
 
 renderValueBox(
   valueBox(ReactiveCurrentLoseStreak()
-           ,color = ifelse(ReactiveCurrentLoseStreak() == 0, "success" ,ifelse(ReactiveCurrentWinStreak() < 3  ,"warning" ,"danger")))
+           ,color = ifelse(ReactiveCurrentLoseStreak() == 0, "success" ,ifelse(ReactiveCurrentLoseStreak() < 3  ,"warning" ,"danger")))
 )
 
 ```
