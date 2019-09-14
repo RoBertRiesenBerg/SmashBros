@@ -612,12 +612,18 @@ renderPlot({
 ### Avg Damage Given by Player
 
 ```{r}
+MaxAvgDamageGivenByPlayer <- DamageGivenByPlayer %>%
+  ungroup() %>%
+  summarise(MaxAvgDamageGiven = max(AvgDamageGiven)) %>%
+  as.numeric()
+
+MaxAvgDamageGivenByPlayer <- max(c(MaxAvgDamageGivenByPlayer ,400))
 
 renderPlot({
   ggplot(DamageGivenByPlayer ,aes(x = reorder(Player ,AvgDamageGiven ,function(x) {x}) ,y = AvgDamageGiven)) +
     geom_col() +
     coord_flip() +
-    scale_y_continuous(labels = scales::comma) +
+    scale_y_continuous(labels = scales::comma ,limit = c(0,400)) +
     # ggtitle("Points by Player") +
     # theme(plot.title = element_text(hjust = 0.5)) +
     labs(x = "Player") +
@@ -639,7 +645,7 @@ renderPlot({
   ggplot(KosByPlayer ,aes(x = reorder(Player ,AvgKos ,function(x) {x}) ,y = AvgKos)) +
     geom_col() +
     coord_flip() +
-    scale_y_continuous(labels = scales::comma) +
+    scale_y_continuous(labels = scales::comma ,limit = c(0,3)) +
     # ggtitle("Points by Player") +
     # theme(plot.title = element_text(hjust = 0.5)) +
     labs(x = "Player") +
