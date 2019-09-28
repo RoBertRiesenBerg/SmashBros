@@ -36,20 +36,33 @@ RawSmashData <- readxl::read_excel("SSBU Code.xlsx")
 ## Reset point
 SmashData <- RawSmashData
 
-## Filtering out extra columns to the right
+## Adding row number field to the data
 SmashData <- SmashData %>%
-  select(Game:DamageGiven)
+  mutate(RowNum = row_number()) %>%
+  select(RowNum ,everything())
+
+## Separating the Smash Data into Opponent & Player
+EvenRowsSmashData <- SmashData %>%
+  filter(row_number() %% 2 == 0) %>%
+  mutate(RowNum = RowNum - 1) %>%
+  select(RowNum ,Game ,Player:DamageGiven)
+  
+OddRowsSmashData <- SmashData %>%
+  filter(row_number() %% 2 == 1) %>%
+  mutate(RowNum = RowNum + 1) %>%
+  select(RowNum ,Game ,Player:DamageGiven)
+
+## Changing the column names
+colnames(EvenRowsSmashData) <- c("RowNum" ,"Game" ,"Opponent" ,"OpponentCharacter" ,"OpponentWin" ,"OpponentKO" ,"OpponentDamageGiven")
+colnames(OddRowsSmashData) <- c("RowNum" ,"Game" ,"Opponent" ,"OpponentCharacter" ,"OpponentWin" ,"OpponentKO" ,"OpponentDamageGiven")
+
+## Getting Opponent Smash Data
+OpponentSmashData <- bind_rows(EvenRowsSmashData ,OddRowsSmashData) %>%
+  arrange(RowNum)
 
 ## Adding in an Opponent Character Column
 SmashData <- SmashData %>%
-  left_join(SmashData ,by = c("Game" ,"Date" ,"Opponent" = "Player"))
-
-## Adjusting the column names after the join
-colnames(SmashData) <- c("Game" ,"Date" ,"Player" ,"Opponent" ,"Character" ,"Win" ,"KO" ,"DamageGiven" ,"Player2" ,"OpponentCharacter" ,"OpponentWin" ,"OpponentKO" ,"OpponentDamageGiven")
-
-## Removing unnecessary Player2 column & re-ordering columns
-SmashData <- SmashData %>%
-  select(Game:Player ,Character:DamageGiven ,Opponent ,OpponentCharacter:OpponentDamageGiven)
+  left_join(OpponentSmashData ,by = c("RowNum" ,"Game"))
 
 ## Fixing my name
 SmashData <- SmashData %>%
