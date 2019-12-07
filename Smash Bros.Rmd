@@ -603,6 +603,35 @@ Cross Player Comparisons {data-navmenu="Smash Stats"}
 Column {data-width=500}
 -----------------------------------------------------------------------
 
+### Wins by Games Played
+
+```{r}
+PlayerWinsOverTime <- SmashData %>%
+  group_by(Player) %>%
+  mutate(PlayerGameNumber = row_number()) %>%
+  select (PlayerGameNumber ,Player ,Win)
+
+PlayerWinsOverTime <- PlayerWinsOverTime %>%
+  mutate(WinsOverTime = cumsum(Win)) %>%
+  select(-Win)
+
+renderPlot({
+  ggplot(PlayerWinsOverTime ,aes(x = PlayerGameNumber ,y = WinsOverTime ,color = Player)) +
+    geom_line() +
+    scale_x_continuous(breaks = pretty_breaks()) +
+    # ggtitle("Points by Player") +
+    scale_color_brewer(palette = "Set1") +
+    # theme(plot.title = element_text(hjust = 0.5)) +
+    # scale_fill_gradientn(colors = c("darkred", "tomato1","palegreen", "darkgreen") ,limit = c(0 ,MaxWeeksAsKing)) + 
+    # scale_fill_brewer(palette = "Set1") +
+    theme_fivethirtyeight() 
+    # theme(axis.title = element_text()) +
+    # labs(x = "Game Number" , y = "Wins")
+})
+
+```
+
+
 ### Win Percent by Player
 
 ```{r}
@@ -621,6 +650,12 @@ renderPlot({
 })
 
 ```
+
+
+
+Column {data-width=500}
+-----------------------------------------------------------------------
+
 
 ### Avg Damage Given by Player
 
@@ -646,9 +681,6 @@ renderPlot({
 })
 
 ```
-
-Column {data-width=500}
------------------------------------------------------------------------
 
 ### Avg KO's by Player
 
