@@ -619,14 +619,15 @@ renderPlot({
   ggplot(PlayerWinsOverTime ,aes(x = PlayerGameNumber ,y = WinsOverTime ,color = Player)) +
     geom_line() +
     scale_x_continuous(breaks = pretty_breaks()) +
+    scale_y_continuous(breaks = pretty_breaks()) +
     # ggtitle("Points by Player") +
     scale_color_brewer(palette = "Set1") +
     # theme(plot.title = element_text(hjust = 0.5)) +
     # scale_fill_gradientn(colors = c("darkred", "tomato1","palegreen", "darkgreen") ,limit = c(0 ,MaxWeeksAsKing)) + 
     # scale_fill_brewer(palette = "Set1") +
-    theme_fivethirtyeight() 
-    # theme(axis.title = element_text()) +
-    # labs(x = "Game Number" , y = "Wins")
+    theme_fivethirtyeight() +
+    theme(axis.title = element_text()) +
+    labs(x = "Game Number" , y = "Wins")
 })
 
 ```
@@ -671,7 +672,7 @@ renderPlot({
   ggplot(DamageGivenByPlayer ,aes(x = reorder(Player ,AvgDamageGiven ,function(x) {x}) ,y = AvgDamageGiven)) +
     geom_col() +
     coord_flip() +
-    scale_y_continuous(labels = scales::comma ,limit = c(0,400)) +
+    scale_y_continuous(labels = scales::comma ,limit = c(0 ,MaxAvgDamageGivenByPlayer)) +
     # ggtitle("Points by Player") +
     # theme(plot.title = element_text(hjust = 0.5)) +
     labs(x = "Player") +
@@ -713,7 +714,7 @@ renderPlot({
   ggplot(GamesPlayedByPlayer ,aes(x = reorder(Player ,GamesPlayed ,function(x) {x}) ,y = GamesPlayed)) +
     geom_col() +
     coord_flip() +
-    scale_y_continuous(labels = scales::comma) +
+    scale_y_continuous(breaks = pretty_breaks()) +
     # ggtitle("Points by Player") +
     # theme(plot.title = element_text(hjust = 0.5)) +
     labs(x = "Player") +
